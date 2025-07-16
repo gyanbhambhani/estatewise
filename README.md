@@ -1,164 +1,280 @@
-# EstateWise - Modular AI Employee System
+# EstateWise 🏠
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 
-A modular AI employee powered by Model Context Protocol (MCP) servers for real estate transaction automation.
+> **Modular AI Employee System for Real Estate Transaction Automation**
+
+EstateWise is a comprehensive AI-powered platform that automates real estate transactions through specialized Model Context Protocol (MCP) servers. Each server handles a specific domain, creating a modular, scalable system for real estate professionals.
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- **Python 3.11+** with [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
+- **Node.js 18+** with [pnpm](https://pnpm.io/installation) package manager
+- **Claude Desktop** (optional, for MCP integration)
+
+### Installation
+
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/gyanbhambhani/estatewise.git
 cd estatewise
 
-# Setup environment
+# 2. Setup environment
 cp env.example .env
+# Edit .env with your API keys (optional for initial testing)
 
-# Start everything
+# 3. Start everything
 ./dev.sh
 ```
 
-**Access the system:**
-- Frontend: http://localhost:3000
-- LeadGen MCP: http://localhost:3001
-- Paperwork MCP: http://localhost:3002
-- ClientSide MCP: http://localhost:3003
+### Access Points
+- **Frontend Dashboard**: http://localhost:3000
+- **LeadGen MCP Server**: http://localhost:3001
+- **Paperwork MCP Server**: http://localhost:3002
+- **ClientSide MCP Server**: http://localhost:3003
 
-## Architecture
+## 🏗️ Architecture
 
-The system is composed of multiple independent MCP servers, each responsible for a specific domain:
+EstateWise follows a **modular microservices architecture** with three specialized MCP servers:
 
-- **LeadGenMCP** - Handles lead generation and follow-up automation
-- **PaperworkMCP** - Fills, tracks, and sends contracts, disclosures, timelines
-- **ClientSideMCP** - Manages client-facing tasks like sending disclosures, generating comps, offer comparison
+### Core Components
 
-The **Next.js frontend** acts as the interaction layer with a command palette, smart cards, and timeline-based workflow interface.
+| Component | Purpose | Port | Key Features |
+|-----------|---------|------|--------------|
+| **LeadGenMCP** | Lead generation & follow-up | 3001 | Lead creation, automated follow-ups |
+| **PaperworkMCP** | Document management | 3002 | Contract filling, document tracking |
+| **ClientSideMCP** | Client interactions | 3003 | Comps generation, disclosures |
 
-## Repository Structure
+### Frontend Interface
+- **Command Palette** - AI-powered command interface (⌘+K)
+- **Timeline View** - Transaction workflow visualization
+- **Smart Cards** - Contextual action recommendations
+
+## 📁 Project Structure
 
 ```
-repo/
+estatewise/
 ├── apps/
-│   └── frontend/          # Next.js + Tailwind UI (Vercel-friendly)
+│   └── frontend/                    # Next.js + Tailwind UI
+│       ├── app/                     # App Router pages
+│       ├── components/              # React components
+│       └── [config files]           # Next.js, Tailwind, TypeScript
 ├── mcp-servers/
-│   ├── leadgen/           # MCP server for lead generation
-│   ├── paperwork/         # MCP server for contract + escrow tools
-│   └── clientside/        # MCP server for comps, disclosures, etc.
+│   ├── leadgen/                     # Lead generation server
+│   │   ├── main.py                  # Server entry point
+│   │   └── tools/                   # Lead generation tools
+│   ├── paperwork/                   # Document management server
+│   │   ├── main.py                  # Server entry point
+│   │   └── tools/                   # Document tools
+│   └── clientside/                  # Client interaction server
+│       ├── main.py                  # Server entry point
+│       └── tools/                   # Client tools
 ├── shared/
-│   └── utils/             # Common scraping, Claude API wrappers, schema validators
-├── .env.example           # Environment config
-├── ClaudeConfig.json      # For Claude Desktop integration
-└── README.md              # This file
+│   └── utils/                       # Common utilities
+│       ├── claude_client.py         # Claude API wrapper
+│       └── schema_validators.py     # Data validation
+├── .env.example                     # Environment template
+├── ClaudeConfig.json               # Claude Desktop config
+├── dev.sh                          # Development startup script
+└── test-mcp-servers.py             # Server testing utility
 ```
 
-## Development Setup
+## 🔧 Development
 
-### Prerequisites
+### Manual Setup (Alternative to dev.sh)
 
-- Python 3.11+ with `uv` package manager
-- Node.js 18+ with `pnpm` package manager
-- Claude Desktop (for MCP integration)
+```bash
+# Frontend Setup
+cd apps/frontend
+pnpm install
+pnpm dev
 
-### Quick Start
+# MCP Servers Setup (in separate terminals)
+cd mcp-servers/leadgen
+uv sync
+uv run python main.py
 
-1. **Clone and setup environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
+cd mcp-servers/paperwork
+uv sync
+uv run python main.py
 
-2. **Install dependencies:**
-   ```bash
-   # Frontend
-   cd apps/frontend
-   pnpm install
-   
-   # MCP Servers
-   cd ../../mcp-servers/leadgen
-   uv sync
-   
-   cd ../paperwork
-   uv sync
-   
-   cd ../clientside
-   uv sync
-   ```
+cd mcp-servers/clientside
+uv sync
+uv run python main.py
+```
 
-3. **Run development servers:**
-   ```bash
-   # Terminal 1: Frontend
-   cd apps/frontend
-   pnpm dev
-   
-   # Terminal 2: LeadGen MCP Server
-   cd mcp-servers/leadgen
-   uv run python main.py
-   
-   # Terminal 3: Paperwork MCP Server
-   cd mcp-servers/paperwork
-   uv run python main.py
-   
-   # Terminal 4: ClientSide MCP Server
-   cd mcp-servers/clientside
-   uv run python main.py
-   ```
+### Testing
 
-4. **Configure Claude Desktop:**
-   - Copy `ClaudeConfig.json` to your Claude Desktop config directory
-   - Restart Claude Desktop
+```bash
+# Test all MCP servers
+python test-mcp-servers.py
 
-## MCP Servers
+# Test individual servers
+curl http://localhost:3001/ping  # LeadGen
+curl http://localhost:3002/ping  # Paperwork
+curl http://localhost:3003/ping  # ClientSide
+```
 
-Each MCP server is built with FastMCP and includes:
-- Dummy `ping()` tool for testing
-- Modular structure for easy tool addition
-- Standard MCP protocol compliance
+## 🛠️ MCP Server Tools
 
-### Available Tools
+### LeadGenMCP (Port 3001)
+```python
+# Available Tools
+ping()                    # Test server connection
+generate_lead()           # Create new lead from property/client data
+follow_up()              # Send follow-up messages to leads
+```
 
-- **LeadGenMCP**: `ping()` - Test connection
-- **PaperworkMCP**: `ping()` - Test connection  
-- **ClientSideMCP**: `ping()` - Test connection
+### PaperworkMCP (Port 3002)
+```python
+# Available Tools
+ping()                    # Test server connection
+fill_contract()           # Fill contract templates with data
+track_document()          # Track document status and progress
+send_document()           # Send documents to recipients
+```
 
-## Frontend Components
+### ClientSideMCP (Port 3003)
+```python
+# Available Tools
+ping()                    # Test server connection
+generate_comps()          # Find comparable properties
+send_disclosure()         # Send disclosure documents
+compare_offers()          # Compare multiple offers
+```
 
-- **CommandPalette**: AI-powered command interface
-- **TimelineView**: Transaction workflow timeline
-- **SmartCards**: Contextual action cards
+## 🎨 Frontend Components
 
-## Environment Variables
+### Command Palette
+- **Keyboard Shortcut**: ⌘+K (Cmd+K)
+- **Features**: AI-powered search, command filtering, keyboard navigation
+- **Categories**: LeadGen, Paperwork, ClientSide
 
-See `.env.example` for required environment variables:
-- Claude API keys
-- Database connections
-- External service credentials
+### Timeline View
+- **Purpose**: Visual transaction workflow
+- **Features**: Status tracking, filtering, action buttons
+- **Status Types**: Completed, Pending, Overdue, Upcoming
 
-## Contributing
+### Smart Cards
+- **Purpose**: Contextual action recommendations
+- **Features**: Priority levels, status indicators, data display
+- **Filters**: Category, Priority, Status
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 🔐 Environment Configuration
 
-## Development Guidelines
+Create `.env` from `.env.example`:
 
-1. Add new tools to MCP servers in their respective `tools/` directories
-2. Update frontend components in `apps/frontend/components/`
-3. Add shared utilities in `shared/utils/`
-4. Test with `uv run python main.py` for each MCP server
+```bash
+# Claude API Configuration
+CLAUDE_API_KEY=your_claude_api_key_here
+CLAUDE_MODEL=claude-3-5-sonnet-20241022
 
-## License
+# MCP Server Configuration
+LEADGEN_MCP_PORT=3001
+PAPERWORK_MCP_PORT=3002
+CLIENTSIDE_MCP_PORT=3003
+
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_MCP_SERVERS=http://localhost:3001,http://localhost:3002,http://localhost:3003
+```
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+```bash
+cd apps/frontend
+vercel --prod
+```
+
+### MCP Servers (Docker)
+```dockerfile
+# Example Dockerfile for MCP servers
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Make** your changes
+4. **Test** your changes: `python test-mcp-servers.py`
+5. **Commit** your changes: `git commit -m 'Add amazing feature'`
+6. **Push** to your branch: `git push origin feature/amazing-feature`
+7. **Open** a Pull Request
+
+### Development Guidelines
+
+- **Code Style**: Follow existing patterns in each MCP server
+- **Testing**: Add tests for new MCP tools
+- **Documentation**: Update README for new features
+- **Commits**: Use conventional commit messages
+
+### Pull Request Process
+
+```bash
+# Create feature branch
+git checkout -b "feature-name"
+
+# Make your edits
+# ... edit files ...
+
+# Push to your remote branch
+git push origin feature-name
+
+# Go to GitHub, create your PR
+# Wait for approval
+# Squash and merge to main
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Port already in use | `lsof -i :3000 && kill -9 <PID>` |
+| MCP server not starting | `cd mcp-servers/leadgen && uv sync` |
+| Frontend not loading | `cd apps/frontend && rm -rf .next && pnpm dev` |
+| Dependencies missing | Run `./dev.sh` to install all dependencies |
+
+### Debug Mode
+```bash
+# Enable debug logging
+export DEBUG=true
+./dev.sh
+```
+
+## 📚 Resources
+
+- [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
+- [FastMCP Documentation](https://github.com/fastmcp/fastmcp)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 🆘 Support
 
-If you have any questions or need help, please open an issue on GitHub.
+- **Issues**: [GitHub Issues](https://github.com/gyanbhambhani/estatewise/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/gyanbhambhani/estatewise/discussions)
+- **Email**: Open an issue for contact information
 
 ---
 
-**Built with ❤️ for the real estate industry** 
+**Built with ❤️ for the real estate industry**
+
+*EstateWise - Automating real estate transactions with AI* 
