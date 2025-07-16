@@ -1,6 +1,31 @@
 # EstateWise - Modular AI Employee System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+
 A modular AI employee powered by Model Context Protocol (MCP) servers for real estate transaction automation.
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/gyanbhambhani/estatewise.git
+cd estatewise
+
+# Setup environment
+cp env.example .env
+
+# Start everything
+./dev.sh
+```
+
+**Access the system:**
+- Frontend: http://localhost:3000
+- LeadGen MCP: http://localhost:3001
+- Paperwork MCP: http://localhost:3002
+- ClientSide MCP: http://localhost:3003
 
 ## Architecture
 
@@ -113,6 +138,14 @@ See `.env.example` for required environment variables:
 
 ## Contributing
 
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Development Guidelines
+
 1. Add new tools to MCP servers in their respective `tools/` directories
 2. Update frontend components in `apps/frontend/components/`
 3. Add shared utilities in `shared/utils/`
@@ -120,4 +153,12 @@ See `.env.example` for required environment variables:
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+If you have any questions or need help, please open an issue on GitHub.
+
+---
+
+**Built with ❤️ for the real estate industry** 
