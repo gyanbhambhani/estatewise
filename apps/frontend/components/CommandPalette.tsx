@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MagnifyingGlassIcon, CommandIcon } from 'lucide-react'
+import { Search, Command } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Command {
@@ -123,11 +123,11 @@ export default function CommandPalette() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <MagnifyingGlassIcon className="w-5 h-5" />
+            <Search className="w-5 h-5" />
             <span>Search commands or type your request...</span>
           </div>
           <div className="flex items-center space-x-1 text-xs">
-            <CommandIcon className="w-4 h-4" />
+            <Command className="w-4 h-4" />
             <span>K</span>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function CommandPalette() {
               {/* Search Input */}
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
+                  <Search className="w-5 h-5 text-gray-400" />
                   <input
                     ref={inputRef}
                     type="text"

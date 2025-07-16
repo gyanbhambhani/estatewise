@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarIcon, CheckCircleIcon, ClockIcon, ExclamationTriangleIcon } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface TimelineItem {
@@ -73,25 +73,25 @@ const sampleTimeline: TimelineItem[] = [
 
 const statusConfig = {
   completed: {
-    icon: CheckCircleIcon,
+    icon: CheckCircle,
     color: 'text-green-600',
     bgColor: 'bg-green-100',
     borderColor: 'border-green-200'
   },
   pending: {
-    icon: ClockIcon,
+    icon: Clock,
     color: 'text-blue-600',
     bgColor: 'bg-blue-100',
     borderColor: 'border-blue-200'
   },
   overdue: {
-    icon: ExclamationTriangleIcon,
+    icon: AlertTriangle,
     color: 'text-red-600',
     bgColor: 'bg-red-100',
     borderColor: 'border-red-200'
   },
   upcoming: {
-    icon: CalendarIcon,
+    icon: Calendar,
     color: 'text-gray-600',
     bgColor: 'bg-gray-100',
     borderColor: 'border-gray-200'
@@ -201,7 +201,7 @@ export default function TimelineView() {
       {/* Empty State */}
       {filteredTimeline.length === 0 && (
         <div className="text-center py-12">
-          <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No timeline items</h3>
           <p className="text-gray-600">No items match your current filter.</p>
         </div>

@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { 
-  UserPlusIcon, 
-  DocumentTextIcon, 
-  HomeIcon, 
-  ChartBarIcon,
-  ArrowRightIcon,
-  ClockIcon,
-  CheckCircleIcon
+  UserPlus, 
+  FileText, 
+  Home, 
+  BarChart3,
+  ArrowRight,
+  Clock,
+  CheckCircle
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -33,7 +33,7 @@ const sampleCards: SmartCard[] = [
     priority: 'high',
     status: 'pending',
     action: 'Generate Lead',
-    icon: UserPlusIcon,
+    icon: UserPlus,
     data: {
       property: '123 Main St, City, State',
       client: 'John Smith',
@@ -48,7 +48,7 @@ const sampleCards: SmartCard[] = [
     priority: 'high',
     status: 'in_progress',
     action: 'Fill Contract',
-    icon: DocumentTextIcon,
+    icon: FileText,
     data: {
       property: '456 Oak Ave, City, State',
       client: 'Jane Doe',
@@ -63,7 +63,7 @@ const sampleCards: SmartCard[] = [
     priority: 'medium',
     status: 'completed',
     action: 'View Report',
-    icon: ChartBarIcon,
+    icon: BarChart3,
     data: {
       property: '789 Pine St, City, State',
       comps_count: 5,
@@ -78,7 +78,7 @@ const sampleCards: SmartCard[] = [
     priority: 'medium',
     status: 'pending',
     action: 'Send Disclosure',
-    icon: DocumentTextIcon,
+    icon: FileText,
     data: {
       client: 'Mike Johnson',
       disclosure_type: 'agency',
@@ -93,7 +93,7 @@ const sampleCards: SmartCard[] = [
     priority: 'low',
     status: 'pending',
     action: 'Follow Up',
-    icon: ClockIcon,
+    icon: Clock,
     data: {
       lead_id: 'lead_20240115_143022',
       last_contact: '2024-01-15',
@@ -108,7 +108,7 @@ const sampleCards: SmartCard[] = [
     priority: 'medium',
     status: 'in_progress',
     action: 'Send Details',
-    icon: HomeIcon,
+    icon: Home,
     data: {
       property: '321 Elm St, City, State',
       showing_time: '2024-01-20 14:00',
@@ -241,7 +241,7 @@ export default function SmartCards() {
               {/* Action Button */}
               <button className="w-full flex items-center justify-center space-x-2 bg-estate-600 text-white py-2 px-4 rounded-lg hover:bg-estate-700 transition-colors">
                 <span>{card.action}</span>
-                <ArrowRightIcon className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </motion.div>
           )
@@ -252,7 +252,7 @@ export default function SmartCards() {
       {filteredCards.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircleIcon className="w-8 h-8 text-gray-400" />
+            <CheckCircle className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
           <p className="text-gray-600">No pending actions match your current filters.</p>
