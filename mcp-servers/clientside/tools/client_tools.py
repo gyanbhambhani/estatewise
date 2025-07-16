@@ -5,6 +5,10 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
 
+# Import rank_offers from sibling module. Use absolute import so the file can
+# be executed directly in tests without a package context.
+from offer_utils import rank_offers
+
 
 class ClientTools:
     """Tools for client-facing tasks and communications"""
@@ -71,37 +75,37 @@ class ClientTools:
             "data": disclosure_data
         }
     
-    def compare_offers(self, 
-                      offers: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Compare multiple offers for a property
-        
-        Args:
-            offers: List of offer data to compare
-        """
+    def compare_offers(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Rank multiple offers for a property using weighted scoring."""
         comparison_id = f"comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        # TODO: Calculate net proceeds
-        # TODO: Analyze terms
-        # TODO: Generate comparison matrix
-        
+
+        ranked_offers = rank_offers(offers)
+
+        if ranked_offers:
+            top = ranked_offers[0]
+            contingencies_desc = (
+                "no contingencies" if not top.get("contingencies")
+                else "few contingencies"
+            )
+            summary = (
+                f"The top offer stands out due to its high price of ${top['price']}, "
+                f"{contingencies_desc}, and an early closing date of {top['close_date']}. "
+                "It's the cleanest and safest bet."
+            )
+        else:
+            summary = "No offers provided."
+
         comparison_data = {
             "comparison_id": comparison_id,
             "total_offers": len(offers),
-            "offers": offers,
-            "analysis": {
-                "highest_price": max(offer.get("price", 0) for offer in offers),
-                "lowest_price": min(offer.get("price", 0) for offer in offers),
-                "average_price": sum(offer.get("price", 0) for offer in offers) / len(offers),
-                "cash_offers": len([o for o in offers if o.get("financing") == "cash"]),
-                "contingent_offers": len([o for o in offers if o.get("contingencies")])
-            },
-            "generated_at": datetime.now().isoformat()
+            "ranked_offers": ranked_offers,
+            "generated_at": datetime.now().isoformat(),
+            "summary": summary,
         }
-        
+
         return {
             "status": "success",
             "comparison_id": comparison_id,
             "message": f"Compared {len(offers)} offers",
-            "data": comparison_data
-        } 
+            "data": comparison_data,
+        }
