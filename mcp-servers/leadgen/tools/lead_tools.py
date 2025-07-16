@@ -4,6 +4,8 @@ Lead generation tools for EstateWise MCP server
 from typing import Dict, Any, Optional
 from datetime import datetime
 import json
+from shared.utils.claude_client import ClaudeClient
+import asyncio
 
 
 class LeadGenTools:
@@ -89,3 +91,50 @@ class LeadGenTools:
             "message": f"Follow-up {follow_up_type} sent to lead {lead_id}",
             "data": follow_up_data
         } 
+
+    async def _gpt_score(self, name: str, email: str, inquiry: str) -> dict:
+        """Use Claude to score the lead, or raise if not available."""
+        prompt = (
+            f"Given this real estate inquiry, rate the lead as hot/warm/cold and explain why.\n"
+            f"Name: {name}\nEmail: {email}\nInquiry: {inquiry}\n"
+            "Respond in JSON: {\"score\": \"hot|warm|cold\", \"explanation\": string}"
+        )
+        client = ClaudeClient()
+        messages = [
+            {"role": "user", "content": prompt}
+        ]
+        text = await client.chat(messages)
+        result = client.extract_json(text)
+        if not result or "score" not in result or "explanation" not in result:
+            raise ValueError("Claude did not return a valid response")
+        return result
+
+    def qualify_lead(self, name: str, email: str, inquiry: str) -> dict:
+        """
+        Qualify a real estate lead as hot, warm, or cold using GPT/Claude or fallback logic.
+        Args:
+            name: Lead's name
+            email: Lead's email
+            inquiry: Inquiry content
+        Returns:
+            dict with 'score' and 'explanation'
+        """
+        # Try Claude/GPT first
+        try:
+            result = asyncio.run(self._gpt_score(name, email, inquiry))
+            return result
+        except Exception:
+            pass  # Fallback to keyword logic
+
+        # Fallback: simple keyword-based scoring
+        inquiry_lower = inquiry.lower()
+        if any(word in inquiry_lower for word in ["buy now", "urgent", "cash offer", "ready to purchase", "asap"]):
+            score = "hot"
+            explanation = "Inquiry contains urgent buying signals."
+        elif any(word in inquiry_lower for word in ["interested", "learn more", "details", "considering"]):
+            score = "warm"
+            explanation = "Inquiry shows interest but not immediate intent."
+        else:
+            score = "cold"
+            explanation = "Inquiry lacks strong buying signals."
+        return {"score": score, "explanation": explanation} 
