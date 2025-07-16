@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "leadgen": {
+      "command": "uv",
+      "args": ["run", "python", "main.py"],
+      "cwd": "./mcp-servers/leadgen",
+      "env": {
+        "PYTHONPATH": "./mcp-servers/leadgen"
+      }
+    },
+    "paperwork": {
+      "command": "uv",
+      "args": ["run", "python", "main.py"],
+      "cwd": "./mcp-servers/paperwork",
+      "env": {
+        "PYTHONPATH": "./mcp-servers/paperwork"
+      }
+    },
+    "clientside": {
+      "command": "uv",
+      "args": ["run", "python", "main.py"],
+      "cwd": "./mcp-servers/clientside",
+      "env": {
+        "PYTHONPATH": "./mcp-servers/clientside"
+      }
+    }
+  }
+} 

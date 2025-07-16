@@ -1,0 +1,1 @@
+# Shared utilities for EstateWise MCP servers and frontend 
