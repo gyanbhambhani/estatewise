@@ -18,63 +18,21 @@ class ClientTools:
             "server": "ClientSideMCP"
         }
     
-    def generate_comps(self, 
-                      property_address: str,
-                      radius_miles: float = 1.0,
-                      days_back: int = 90) -> Dict[str, Any]:
+    def generate_comps(self, address: str) -> List[Dict[str, Any]]:
         """
         Generate comparable properties for a given address
         
         Args:
-            property_address: Address to find comps for
-            radius_miles: Search radius in miles
-            days_back: Number of days back to search for sales
+            address: Address to find comps for
         """
-        comps_id = f"comps_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        # TODO: Query MLS database
-        # TODO: Filter by criteria
-        # TODO: Calculate adjustments
-        
-        sample_comps = [
-            {
-                "address": "123 Main St",
-                "price": 450000,
-                "sqft": 1800,
-                "bedrooms": 3,
-                "bathrooms": 2,
-                "sold_date": "2024-01-15",
-                "days_on_market": 45
-            },
-            {
-                "address": "456 Oak Ave",
-                "price": 475000,
-                "sqft": 1900,
-                "bedrooms": 3,
-                "bathrooms": 2.5,
-                "sold_date": "2024-02-01",
-                "days_on_market": 30
-            }
+        # Mock comparable properties data
+        comps = [
+            {"address": "123 Oak St", "price": 950000, "sqft": 1800},
+            {"address": "456 Elm St", "price": 890000, "sqft": 1700},
+            {"address": "789 Pine St", "price": 970000, "sqft": 2000}
         ]
         
-        comps_data = {
-            "comps_id": comps_id,
-            "subject_property": property_address,
-            "search_criteria": {
-                "radius_miles": radius_miles,
-                "days_back": days_back
-            },
-            "comparable_properties": sample_comps,
-            "generated_at": datetime.now().isoformat(),
-            "total_comps": len(sample_comps)
-        }
-        
-        return {
-            "status": "success",
-            "comps_id": comps_id,
-            "message": f"Generated {len(sample_comps)} comparable properties",
-            "data": comps_data
-        }
+        return comps
     
     def send_disclosure(self, 
                        client_email: str,

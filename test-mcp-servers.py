@@ -39,6 +39,28 @@ async def test_mcp_server(name: str, port: int) -> Dict[str, Any]:
         }
 
 
+async def test_generate_comps_endpoint():
+    """Test the generate_comps endpoint of ClientSide MCP server"""
+    url = "http://localhost:3003/generate_comps"
+    test_data = {"address": "500 Maple Ave"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(url, json=test_data)
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ generate_comps endpoint working")
+                print(f"   Input: {test_data}")
+                print(f"   Output: {data}")
+                return True
+            else:
+                print(f"❌ generate_comps endpoint failed: HTTP {response.status_code}")
+                return False
+    except Exception as e:
+        print(f"❌ generate_comps endpoint error: {e}")
+        return False
+
+
 async def main():
     """Test all MCP servers"""
     print("🧪 Testing EstateWise MCP Servers")
@@ -61,6 +83,10 @@ async def main():
             print(f"   Response: {result['response']}")
         else:
             print(f"❌ {name} failed: {result['error']}")
+    
+    # Test generate_comps endpoint specifically
+    print(f"\n🔍 Testing generate_comps endpoint...")
+    await test_generate_comps_endpoint()
     
     print("\n" + "=" * 40)
     print("📊 Test Results Summary")
