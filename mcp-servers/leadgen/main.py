@@ -20,6 +20,7 @@ lead_tools = LeadGenTools()
 server.register_tool(lead_tools.ping, "ping")
 server.register_tool(lead_tools.generate_lead, "generate_lead")
 server.register_tool(lead_tools.follow_up, "follow_up")
+server.register_tool(lead_tools.qualify_lead, "qualify_lead")
 
 if __name__ == "__main__":
     port = int(os.getenv("LEADGEN_MCP_PORT", 3001))
