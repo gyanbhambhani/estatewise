@@ -120,3 +120,22 @@ class DocumentTools:
             "message": f"Document {document_id} sent to {recipient_email}",
             "data": delivery_data
         } 
+
+    def draft_contract(self, address: str, buyer_name: str, offer_price: float) -> Dict[str, Any]:
+        """
+        Draft a friendly, natural language contract for a property purchase.
+        Args:
+            address: Property address
+            buyer_name: Name of the buyer
+            offer_price: Offer price for the property
+        Returns:
+            Dict with a friendly contract text
+        """
+        contract_text = (
+            f"This is a formal purchase agreement for {address}, prepared on behalf of {buyer_name} "
+            f"for an offer of ${offer_price:,.0f}. Please review the terms enclosed and proceed with digital signature."
+        )
+        return {
+            "status": "success",
+            "contract_text": contract_text
+        } 

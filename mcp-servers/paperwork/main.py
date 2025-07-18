@@ -21,6 +21,7 @@ server.register_tool(doc_tools.ping, "ping")
 server.register_tool(doc_tools.fill_contract, "fill_contract")
 server.register_tool(doc_tools.track_document, "track_document")
 server.register_tool(doc_tools.send_document, "send_document")
+server.register_tool(doc_tools.draft_contract, "draft_contract")
 
 if __name__ == "__main__":
     port = int(os.getenv("PAPERWORK_MCP_PORT", 3002))
