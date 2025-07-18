@@ -7,7 +7,7 @@ import json
 
 # Import rank_offers from sibling module. Use absolute import so the file can
 # be executed directly in tests without a package context.
-from offer_utils import rank_offers
+from .offer_utils import rank_offers
 
 
 class ClientTools:

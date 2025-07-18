@@ -11,12 +11,35 @@ EstateWise is a comprehensive AI-powered platform that automates real estate tra
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Docker (Recommended)
+
+#### Prerequisites
+- **Docker** and **Docker Compose** installed
+- **Claude Desktop** (optional, for MCP integration)
+
+#### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/gyanbhambhani/estatewise.git
+cd estatewise
+
+# 2. Setup environment
+cp env.example .env
+# Edit .env with your API keys (optional for initial testing)
+
+# 3. Start everything with Docker
+./docker-start.sh
+```
+
+### Option 2: Local Development
+
+#### Prerequisites
 - **Python 3.11+** with [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
 - **Node.js 18+** with [pnpm](https://pnpm.io/installation) package manager
 - **Claude Desktop** (optional, for MCP integration)
 
-### Installation
+#### Installation
 
 ```bash
 # 1. Clone the repository
@@ -185,6 +208,59 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_MCP_SERVERS=http://localhost:3001,http://localhost:3002,http://localhost:3003
 ```
 
+## 🐳 Docker
+
+### Quick Start with Docker
+
+```bash
+# Start all services
+./docker-start.sh
+
+# Or manually with docker-compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Docker Commands
+
+```bash
+# Build images
+docker-compose build
+
+# Start services in background
+docker-compose up -d
+
+# Start services with logs
+docker-compose up
+
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+
+# View service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f [service-name]
+
+# Rebuild and restart
+docker-compose up --build -d
+```
+
+### Docker Architecture
+
+- **Frontend Container**: Next.js application on port 3000
+- **Backend Container**: All MCP servers (ports 3001-3003)
+- **Network**: Internal communication between services
+- **Volumes**: Persistent data storage (if needed)
+
 ## 🚀 Deployment
 
 ### Frontend (Vercel)
@@ -193,15 +269,14 @@ cd frontend
 vercel --prod
 ```
 
-### MCP Servers (Docker)
-```dockerfile
-# Example Dockerfile for MCP servers
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "main.py"]
+### Backend (Docker)
+```bash
+# Build and push to registry
+docker build -t estatewise-backend ./backend
+docker push your-registry/estatewise-backend
+
+# Deploy with docker-compose
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## 🤝 Contributing

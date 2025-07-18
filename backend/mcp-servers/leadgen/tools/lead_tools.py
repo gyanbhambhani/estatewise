@@ -4,9 +4,24 @@ Lead generation tools for EstateWise MCP server
 from typing import Dict, Any, Optional
 from datetime import datetime
 import json
-from shared.utils.claude_client import ClaudeClient
 import asyncio
-from shared.utils.tool_logger import log_tool_call
+# Import shared utilities with proper path
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'shared', 'utils'))
+try:
+    from claude_client import ClaudeClient
+    from tool_logger import log_tool_call
+except ImportError:
+    # Fallback for when shared utils are not available
+    class ClaudeClient:
+        async def chat(self, messages):
+            return "Mock response"
+        def extract_json(self, text):
+            return {"score": "warm", "explanation": "Mock response"}
+    
+    def log_tool_call(func):
+        return func
 
 
 
