@@ -10,11 +10,11 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'shared', 'utils'))
 try:
-    from claude_client import ClaudeClient
+    from openai_client import OpenAIClient
     from tool_logger import log_tool_call
 except ImportError:
     # Fallback for when shared utils are not available
-    class ClaudeClient:
+    class OpenAIClient:
         async def chat(self, messages):
             return "Mock response"
         def extract_json(self, text):
@@ -111,25 +111,25 @@ class LeadGenTools:
         } 
 
     async def _gpt_score(self, name: str, email: str, inquiry: str) -> dict:
-        """Use Claude to score the lead, or raise if not available."""
+        """Use OpenAI to score the lead, or raise if not available."""
         prompt = (
             f"Given this real estate inquiry, rate the lead as hot/warm/cold and explain why.\n"
             f"Name: {name}\nEmail: {email}\nInquiry: {inquiry}\n"
             "Respond in JSON: {\"score\": \"hot|warm|cold\", \"explanation\": string}"
         )
-        client = ClaudeClient()
+        client = OpenAIClient()
         messages = [
             {"role": "user", "content": prompt}
         ]
         text = await client.chat(messages)
         result = client.extract_json(text)
         if not result or "score" not in result or "explanation" not in result:
-            raise ValueError("Claude did not return a valid response")
+            raise ValueError("OpenAI did not return a valid response")
         return result
 
     def qualify_lead(self, name: str, email: str, inquiry: str) -> dict:
         """
-        Qualify a real estate lead as hot, warm, or cold using GPT/Claude or fallback logic.
+        Qualify a real estate lead as hot, warm, or cold using OpenAI or fallback logic.
         Args:
             name: Lead's name
             email: Lead's email
@@ -137,7 +137,7 @@ class LeadGenTools:
         Returns:
             dict with 'score' and 'explanation'
         """
-        # Try Claude/GPT first
+        # Try OpenAI first
         try:
             result = asyncio.run(self._gpt_score(name, email, inquiry))
             return result

@@ -7,7 +7,14 @@ import json
 
 # Import rank_offers from sibling module. Use absolute import so the file can
 # be executed directly in tests without a package context.
-from .offer_utils import rank_offers
+try:
+    from .offer_utils import rank_offers
+except ImportError:
+    # Fallback for when running as standalone script
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent))
+    from offer_utils import rank_offers
 
 
 class ClientTools:

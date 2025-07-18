@@ -15,7 +15,7 @@ EstateWise is a comprehensive AI-powered platform that automates real estate tra
 
 #### Prerequisites
 - **Docker** and **Docker Compose** installed
-- **Claude Desktop** (optional, for MCP integration)
+- **Claude Desktop** (optional, for MCP integration with OpenAI)
 
 #### Installation
 
@@ -37,7 +37,7 @@ cp env.example .env
 #### Prerequisites
 - **Python 3.11+** with [uv](https://docs.astral.sh/uv/getting-started/installation/) package manager
 - **Node.js 18+** with [pnpm](https://pnpm.io/installation) package manager
-- **Claude Desktop** (optional, for MCP integration)
+- **Claude Desktop** (optional, for MCP integration with OpenAI)
 
 #### Installation
 
@@ -103,7 +103,7 @@ estatewise/
 │   ├── test-mcp-servers.py          # Server testing utility
 │   └── test_generate_comps.py       # Component testing utility
 ├── .env.example                     # Environment template
-├── ClaudeConfig.json               # Claude Desktop config
+├── OpenAIConfig.json               # OpenAI Desktop config
 └── dev.sh                          # Development startup script
 ```
 
@@ -194,9 +194,9 @@ compare_offers()          # Compare multiple offers
 Create `.env` from `.env.example`:
 
 ```bash
-# Claude API Configuration
-CLAUDE_API_KEY=your_claude_api_key_here
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o
 
 # MCP Server Configuration
 LEADGEN_MCP_PORT=3001
