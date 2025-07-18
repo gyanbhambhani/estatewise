@@ -1,7 +1,7 @@
 [project]
 name = "paperwork-mcp"
 version = "0.1.0"
-description = "MCP server for contract and escrow document management"
+description = "MCP server for document generation and paperwork automation"
 authors = [
     {name = "EstateWise Team", email = "team@estatewise.com"}
 ]
@@ -9,8 +9,6 @@ dependencies = [
     "fastmcp>=0.1.0",
     "httpx>=0.25.0",
     "pydantic>=2.0.0",
-    "python-docx>=0.8.11",
-    "PyPDF2>=3.0.0",
 ]
 requires-python = ">=3.11"
 
