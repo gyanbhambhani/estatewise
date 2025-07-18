@@ -55,7 +55,7 @@ start_mcp_server() {
 # Function to start frontend
 start_frontend() {
     echo "🔄 Starting Next.js Frontend..."
-    cd "apps/frontend" || exit 1
+    cd "frontend" || exit 1
     
     # Check if pnpm is available
     if ! command -v pnpm &> /dev/null; then
@@ -83,13 +83,13 @@ mkdir -p logs
 echo ""
 echo "🔄 Starting MCP Servers..."
 
-start_mcp_server "LeadGen" 3001 "mcp-servers/leadgen"
+start_mcp_server "LeadGen" 3001 "backend/mcp-servers/leadgen"
 sleep 2
 
-start_mcp_server "Paperwork" 3002 "mcp-servers/paperwork"
+start_mcp_server "Paperwork" 3002 "backend/mcp-servers/paperwork"
 sleep 2
 
-start_mcp_server "ClientSide" 3003 "mcp-servers/clientside"
+start_mcp_server "ClientSide" 3003 "backend/mcp-servers/clientside"
 sleep 2
 
 echo ""

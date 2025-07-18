@@ -8,7 +8,7 @@ from pathlib import Path
 import asyncio
 
 # Add shared utils to path
-sys.path.append(str(Path(__file__).parent.parent.parent / "shared" / "utils"))
+sys.path.append(str(Path(__file__).parent.parent / "shared" / "utils"))
 
 from fastmcp import FastMCP
 from tools.client_tools import ClientTools

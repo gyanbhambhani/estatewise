@@ -58,29 +58,30 @@ EstateWise follows a **modular microservices architecture** with three specializ
 
 ```
 estatewise/
-├── apps/
-│   └── frontend/                    # Next.js + Tailwind UI
-│       ├── app/                     # App Router pages
-│       ├── components/              # React components
-│       └── [config files]           # Next.js, Tailwind, TypeScript
-├── mcp-servers/
-│   ├── leadgen/                     # Lead generation server
-│   │   ├── main.py                  # Server entry point
-│   │   └── tools/                   # Lead generation tools
-│   ├── paperwork/                   # Document management server
-│   │   ├── main.py                  # Server entry point
-│   │   └── tools/                   # Document tools
-│   └── clientside/                  # Client interaction server
-│       ├── main.py                  # Server entry point
-│       └── tools/                   # Client tools
-├── shared/
-│   └── utils/                       # Common utilities
-│       ├── claude_client.py         # Claude API wrapper
-│       └── schema_validators.py     # Data validation
+├── frontend/                        # Next.js + Tailwind UI
+│   ├── app/                         # App Router pages
+│   ├── components/                  # React components
+│   └── [config files]               # Next.js, Tailwind, TypeScript
+├── backend/                         # Backend services and utilities
+│   ├── mcp-servers/                 # MCP servers
+│   │   ├── leadgen/                 # Lead generation server
+│   │   │   ├── main.py              # Server entry point
+│   │   │   └── tools/               # Lead generation tools
+│   │   ├── paperwork/               # Document management server
+│   │   │   ├── main.py              # Server entry point
+│   │   │   └── tools/               # Document tools
+│   │   └── clientside/              # Client interaction server
+│   │       ├── main.py              # Server entry point
+│   │       └── tools/               # Client tools
+│   ├── shared/                      # Common utilities
+│   │   └── utils/                   # Shared utilities
+│   │       ├── claude_client.py     # Claude API wrapper
+│   │       └── schema_validators.py # Data validation
+│   ├── test-mcp-servers.py          # Server testing utility
+│   └── test_generate_comps.py       # Component testing utility
 ├── .env.example                     # Environment template
 ├── ClaudeConfig.json               # Claude Desktop config
-├── dev.sh                          # Development startup script
-└── test-mcp-servers.py             # Server testing utility
+└── dev.sh                          # Development startup script
 ```
 
 ## 🔧 Development
@@ -89,20 +90,20 @@ estatewise/
 
 ```bash
 # Frontend Setup
-cd apps/frontend
+cd frontend
 pnpm install
 pnpm dev
 
 # MCP Servers Setup (in separate terminals)
-cd mcp-servers/leadgen
+cd backend/mcp-servers/leadgen
 uv sync
 uv run python main.py
 
-cd mcp-servers/paperwork
+cd backend/mcp-servers/paperwork
 uv sync
 uv run python main.py
 
-cd mcp-servers/clientside
+cd backend/mcp-servers/clientside
 uv sync
 uv run python main.py
 ```
@@ -111,6 +112,7 @@ uv run python main.py
 
 ```bash
 # Test all MCP servers
+cd backend
 python test-mcp-servers.py
 
 # Test individual servers
@@ -187,7 +189,7 @@ NEXT_PUBLIC_MCP_SERVERS=http://localhost:3001,http://localhost:3002,http://local
 
 ### Frontend (Vercel)
 ```bash
-cd apps/frontend
+cd frontend
 vercel --prod
 ```
 

@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 # Add shared utils to path
-sys.path.append(str(Path(__file__).parent.parent.parent / "shared" / "utils"))
+sys.path.append(str(Path(__file__).parent.parent / "shared" / "utils"))
 
 from fastmcp import FastMCP
 from tools.document_tools import DocumentTools
