@@ -4,11 +4,15 @@ Lead generation tools for EstateWise MCP server
 from typing import Dict, Any, Optional
 from datetime import datetime
 import json
+from shared.utils.claude_client import ClaudeClient
+import asyncio
+from shared.utils.tool_logger import log_tool_call
 
 
 class LeadGenTools:
     """Tools for lead generation and follow-up automation"""
     
+    @log_tool_call
     def ping(self) -> Dict[str, Any]:
         """Test connection to LeadGen MCP server"""
         return {
