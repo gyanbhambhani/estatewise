@@ -37,7 +37,7 @@ def send_disclosure(client_email: str, disclosure_type: str, transaction_id: str
 
 @server.tool
 def compare_offers(offers: list):
-    """Compare multiple offers for a property"""
+    """Compare and rank multiple offers for a property"""
     return client_tools.compare_offers(offers)
 
 if __name__ == "__main__":
