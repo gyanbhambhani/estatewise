@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import CommandPalette from '@/components/CommandPalette'
 import TimelineView from '@/components/TimelineView'
 import SmartCards from '@/components/SmartCards'
@@ -9,8 +9,14 @@ import FloatingActionButton from '@/components/FloatingActionButton'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToolStream } from '@/hooks/useToolStream'
 
+const MCP_CHAT_SERVERS = [
+  { key: "clientside", label: "Clientside" },
+  { key: "leadgen", label: "Leadgen" },
+  { key: "paperwork", label: "Paperwork" },
+];
+
 export default function Home() {
-  const [activeView, setActiveView] = useState<'timeline' | 'cards' | 'tools'>('timeline')
+  const [activeView, setActiveView] = useState<'timeline' | 'cards' | 'tools' | 'chatmcp'>('timeline')
   const [isLoaded, setIsLoaded] = useState(false)
   const [showToolStream, setShowToolStream] = useState(false)
   
@@ -20,6 +26,18 @@ export default function Home() {
     isStreamOpen,
     submitIssueReport 
   } = useToolStream()
+
+  // Chat MCP state
+  const [activeChatTab, setActiveChatTab] = useState("clientside");
+  const [chatHistories, setChatHistories] = useState<Record<string, { sender: string; text: string }[]>>({
+    clientside: [],
+    leadgen: [],
+    paperwork: [],
+  });
+  const [messageInput, setMessageInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsLoaded(true)
@@ -50,6 +68,37 @@ export default function Home() {
     }
     submitIssueReport(issueReport)
   }
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageInput.trim()) return;
+    setChatLoading(true);
+    setChatError(null);
+    const userMsg = { sender: "You", text: messageInput };
+    setChatHistories(prev => ({
+      ...prev,
+      [activeChatTab]: [...prev[activeChatTab], userMsg],
+    }));
+    setMessageInput("");
+    try {
+      const res = await fetch("/api/chatmcp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ server: activeChatTab, message: userMsg.text }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setChatHistories(prev => ({
+        ...prev,
+        [activeChatTab]: [...prev[activeChatTab], { sender: MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label || activeChatTab, text: data.response || JSON.stringify(data) }],
+      }));
+    } catch (err: any) {
+      setChatError(err.message || "Unknown error");
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+  };
 
   return (
     <motion.div 
@@ -177,6 +226,19 @@ export default function Home() {
               >
                 Tool Streaming
               </motion.button>
+              <motion.button
+                onClick={() => setActiveView('chatmcp')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeView === 'chatmcp'
+                    ? 'bg-estate-100 text-estate-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                Chat MCP
+              </motion.button>
             </motion.div>
           </div>
         </div>
@@ -189,6 +251,58 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
+          {/* Chat MCP Section */}
+          {activeView === 'chatmcp' && (
+            <div className="mb-8 p-4 border rounded-lg bg-white/90 shadow">
+              <h2 className="font-semibold mb-2">Chat MCP Servers</h2>
+              <div className="flex gap-2 mb-4">
+                {MCP_CHAT_SERVERS.map(tab => (
+                  <button
+                    key={tab.key}
+                    className={`px-4 py-1 rounded-t ${activeChatTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                    onClick={() => setActiveChatTab(tab.key)}
+                    disabled={chatLoading}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="h-64 overflow-y-auto bg-gray-50 p-2 rounded border mb-2">
+                {chatHistories[activeChatTab].length === 0 && (
+                  <div className="text-gray-400 text-sm">No messages yet. Start the conversation!</div>
+                )}
+                {chatHistories[activeChatTab].map((msg, idx) => (
+                  <div key={idx} className={`mb-2 flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`px-3 py-1 rounded-lg max-w-xs break-words ${msg.sender === 'You' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
+                      <span className="block text-xs font-semibold mb-0.5">{msg.sender}</span>
+                      <span>{msg.text}</span>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatBottomRef} />
+              </div>
+              <form onSubmit={handleSendMessage} className="flex gap-2">
+                <input
+                  type="text"
+                  className="flex-1 border px-2 py-1 rounded"
+                  placeholder="Type your message..."
+                  value={messageInput}
+                  onChange={e => setMessageInput(e.target.value)}
+                  disabled={chatLoading}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  disabled={chatLoading || !messageInput.trim()}
+                >
+                  {chatLoading ? "Sending..." : "Send"}
+                </button>
+              </form>
+              {chatError && <div className="text-red-600 text-sm mt-2">{chatError}</div>}
+            </div>
+          )}
+
           {/* Command Palette */}
           <motion.div 
             className="mb-8"
