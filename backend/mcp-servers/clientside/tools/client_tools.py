@@ -5,16 +5,16 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import json
 
-# Import rank_offers from sibling module. Use absolute import so the file can
+# Import offer utilities from sibling module. Use absolute import so the file can
 # be executed directly in tests without a package context.
 try:
-    from .offer_utils import rank_offers
+    from .offer_utils import rank_offers, generate_gpt_analysis, create_pros_cons_table
 except ImportError:
     # Fallback for when running as standalone script
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent))
-    from offer_utils import rank_offers
+    from offer_utils import rank_offers, generate_gpt_analysis, create_pros_cons_table
 
 
 class ClientTools:
@@ -82,37 +82,58 @@ class ClientTools:
             "data": disclosure_data
         }
     
-    def compare_offers(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Rank multiple offers for a property using weighted scoring."""
+    async def compare_offers(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Compare and analyze multiple offers for a property with GPT summary and pros/cons table."""
         comparison_id = f"comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+        # Rank offers using existing algorithm
         ranked_offers = rank_offers(offers)
 
-        if ranked_offers:
+        if not ranked_offers:
+            return {
+                "status": "error",
+                "message": "No offers provided for comparison",
+                "data": {
+                    "comparison_id": comparison_id,
+                    "total_offers": 0,
+                    "ranked_offers": [],
+                    "summary": "No offers provided.",
+                    "pros_cons_table": [],
+                    "generated_at": datetime.now().isoformat(),
+                }
+            }
+
+        # Generate GPT analysis (async)
+        try:
+            gpt_analysis = await generate_gpt_analysis(offers, ranked_offers)
+            summary = gpt_analysis.get("summary", "")
+            pros_cons_table = gpt_analysis.get("pros_cons_table", [])
+        except Exception as e:
+            # Fallback to basic analysis if GPT fails
             top = ranked_offers[0]
             contingencies_desc = (
                 "no contingencies" if not top.get("contingencies")
-                else "few contingencies"
+                else f"{len(top.get('contingencies', []))} contingencies"
             )
             summary = (
-                f"The top offer stands out due to its high price of ${top['price']}, "
-                f"{contingencies_desc}, and an early closing date of {top['close_date']}. "
-                "It's the cleanest and safest bet."
+                f"The top offer stands out due to its high price of ${top['price']:,}, "
+                f"{contingencies_desc}, and closing date of {top['close_date']}. "
+                f"Score: {top['score']}/100"
             )
-        else:
-            summary = "No offers provided."
+            pros_cons_table = create_pros_cons_table(ranked_offers)
 
         comparison_data = {
             "comparison_id": comparison_id,
             "total_offers": len(offers),
             "ranked_offers": ranked_offers,
-            "generated_at": datetime.now().isoformat(),
             "summary": summary,
+            "pros_cons_table": pros_cons_table,
+            "generated_at": datetime.now().isoformat(),
         }
 
         return {
             "status": "success",
             "comparison_id": comparison_id,
-            "message": f"Compared {len(offers)} offers",
+            "message": f"Compared {len(offers)} offers with GPT analysis",
             "data": comparison_data,
         }
