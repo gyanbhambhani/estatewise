@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// TODO: Move MCP base URL into .env.local
-const MCP_BASE_URL = 'http://localhost:3001';
+import { fetchFromMCPPost } from '../../../utils/fetchFromMCP';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,32 +15,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Construct the MCP server URL
-    const mcpUrl = `${MCP_BASE_URL}/api/${toolName}`;
+    // Use the shared utility to make the MCP request
+    const mcpResponse = await fetchFromMCPPost(toolName, inputPayload || {});
 
-    // Forward the request to the MCP server
-    const response = await fetch(mcpUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(inputPayload),
-    });
-
-    // Check if the MCP server responded successfully
-    if (!response.ok) {
-      const errorText = await response.text();
+    // Check if the MCP request was successful
+    if (!mcpResponse.success) {
       return NextResponse.json(
-        { error: `MCP server error: ${errorText}` },
+        { error: mcpResponse.error },
         { status: 502 }
       );
     }
 
-    // Get the response from the MCP server
-    const mcpResponse = await response.json();
-
     // Return the MCP server response directly to the frontend
-    return NextResponse.json(mcpResponse);
+    return NextResponse.json(mcpResponse.data);
 
   } catch (error) {
     // Handle unexpected errors
