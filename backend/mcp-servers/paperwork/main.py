@@ -12,6 +12,7 @@ sys.path.append(str(Path(__file__).parent.parent / "shared" / "utils"))
 
 from fastmcp import FastMCP
 from tools.document_tools import DocumentTools
+from tools.track_contract_status import track_contract_status
 
 # Initialize FastMCP server
 server = FastMCP("PaperworkMCP")
@@ -44,6 +45,11 @@ def send_document(document_id: str, recipient_email: str, message: str = None, d
 def draft_contract(address: str, buyer_name: str, offer_price: float):
     """Draft a friendly, natural language contract for a property purchase"""
     return doc_tools.draft_contract(address, buyer_name, offer_price)
+
+@server.tool
+def track_contract_status(property_id: str):
+    """Check the lifecycle status of a contract for a given property_id."""
+    return track_contract_status(property_id)
 
 if __name__ == "__main__":
     port = int(os.getenv("PAPERWORK_MCP_PORT", 3002))
