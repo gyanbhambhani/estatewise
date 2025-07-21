@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { fetchFromMCPPost } from '../../../utils/fetchFromMCP';
 // MCP server configuration
 const MCP_SERVERS = {
   leadgen: 'http://localhost:3001',

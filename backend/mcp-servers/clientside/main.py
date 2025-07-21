@@ -36,9 +36,9 @@ def send_disclosure(client_email: str, disclosure_type: str, transaction_id: str
     return client_tools.send_disclosure(client_email, disclosure_type, transaction_id, message)
 
 @server.tool
-def compare_offers(offers: list):
-    """Compare and rank multiple offers for a property"""
-    return client_tools.compare_offers(offers)
+async def compare_offers(offers: list):
+    """Compare and rank multiple offers for a property with GPT analysis and pros/cons table"""
+    return await client_tools.compare_offers(offers)
 
 if __name__ == "__main__":
     port = int(os.getenv("CLIENTSIDE_MCP_PORT", 3003))
