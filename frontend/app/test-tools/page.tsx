@@ -1,11 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRef } from "react";
 
 const MCP_ENDPOINTS = {
   generate_comps: "http://localhost:3003/generate_comps",
   draft_contract: "http://localhost:3002/draft_contract",
 };
+
+const MCP_CHAT_SERVERS = [
+  { key: "clientside", label: "Clientside" },
+  { key: "leadgen", label: "Leadgen" },
+  { key: "paperwork", label: "Paperwork" },
+];
 
 export default function TestToolsPage() {
   // State for Generate Comps
@@ -20,6 +27,18 @@ export default function TestToolsPage() {
   const [contractResult, setContractResult] = useState<any>(null);
   const [contractLoading, setContractLoading] = useState(false);
   const [contractError, setContractError] = useState<string | null>(null);
+
+  // Chat MCP state
+  const [activeTab, setActiveTab] = useState("clientside");
+  const [chatHistories, setChatHistories] = useState<Record<string, { sender: string; text: string }[]>>({
+    clientside: [],
+    leadgen: [],
+    paperwork: [],
+  });
+  const [messageInput, setMessageInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Handlers
   const handleGenerateComps = async (e: React.FormEvent) => {
@@ -64,9 +83,90 @@ export default function TestToolsPage() {
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageInput.trim()) return;
+    setChatLoading(true);
+    setChatError(null);
+    const userMsg = { sender: "You", text: messageInput };
+    setChatHistories(prev => ({
+      ...prev,
+      [activeTab]: [...prev[activeTab], userMsg],
+    }));
+    setMessageInput("");
+    try {
+      const res = await fetch("/api/chatmcp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ server: activeTab, message: userMsg.text }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setChatHistories(prev => ({
+        ...prev,
+        [activeTab]: [...prev[activeTab], { sender: MCP_CHAT_SERVERS.find(s => s.key === activeTab)?.label || activeTab, text: data.response || JSON.stringify(data) }],
+      }));
+    } catch (err: any) {
+      setChatError(err.message || "Unknown error");
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
+  };
+
   return (
     <div className="max-w-xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-6">🧪 MCP Test Tools</h1>
+
+      {/* MCP Chat Section */}
+      <div className="mb-10 p-4 border rounded-lg bg-white shadow">
+        <h2 className="font-semibold mb-2">Chat MCP Servers</h2>
+        <div className="flex gap-2 mb-4">
+          {MCP_CHAT_SERVERS.map(tab => (
+            <button
+              key={tab.key}
+              className={`px-4 py-1 rounded-t ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              onClick={() => setActiveTab(tab.key)}
+              disabled={chatLoading}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="h-64 overflow-y-auto bg-gray-50 p-2 rounded border mb-2">
+          {chatHistories[activeTab].length === 0 && (
+            <div className="text-gray-400 text-sm">No messages yet. Start the conversation!</div>
+          )}
+          {chatHistories[activeTab].map((msg, idx) => (
+            <div key={idx} className={`mb-2 flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`px-3 py-1 rounded-lg max-w-xs break-words ${msg.sender === 'You' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`}>
+                <span className="block text-xs font-semibold mb-0.5">{msg.sender}</span>
+                <span>{msg.text}</span>
+              </div>
+            </div>
+          ))}
+          <div ref={chatBottomRef} />
+        </div>
+        <form onSubmit={handleSendMessage} className="flex gap-2">
+          <input
+            type="text"
+            className="flex-1 border px-2 py-1 rounded"
+            placeholder="Type your message..."
+            value={messageInput}
+            onChange={e => setMessageInput(e.target.value)}
+            disabled={chatLoading}
+            required
+          />
+          <button
+            type="submit"
+            className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            disabled={chatLoading || !messageInput.trim()}
+          >
+            {chatLoading ? "Sending..." : "Send"}
+          </button>
+        </form>
+        {chatError && <div className="text-red-600 text-sm mt-2">{chatError}</div>}
+      </div>
 
       {/* Generate Comps Section */}
       <form
