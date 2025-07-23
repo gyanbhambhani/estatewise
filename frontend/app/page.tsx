@@ -1,834 +1,378 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import CommandPalette from '@/components/CommandPalette'
-import TimelineView from '@/components/TimelineView'
-import SmartCards from '@/components/SmartCards'
-import ToolStream from '@/components/ToolStream'
-import FloatingActionButton from '@/components/FloatingActionButton'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useToolStream } from '@/hooks/useToolStream'
+import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion'
+import Link from 'next/link'
+import { Inter } from 'next/font/google'
 
-const MCP_CHAT_SERVERS = [
-  { key: "clientside", label: "Clientside" },
-  { key: "leadgen", label: "Leadgen" },
-  { key: "paperwork", label: "Paperwork" },
-];
+// Load a lighter, more inviting font
+const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-inter' })
 
-export default function Home() {
-  const [activeView, setActiveView] = useState<'timeline' | 'cards' | 'tools' | 'chatmcp'>('timeline')
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [showToolStream, setShowToolStream] = useState(false)
-  
-  const { 
-    toolOutputs, 
-    connectionStatus, 
-    isStreamOpen,
-    submitIssueReport 
-  } = useToolStream()
+export default function LandingPage() {
+  const [scrollY, setScrollY] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll()
+  const heroInView = useInView(heroRef, { once: true })
 
-  // Chat MCP state
-  const [activeChatTab, setActiveChatTab] = useState("clientside");
-  const [chatHistories, setChatHistories] = useState<Record<string, { sender: string; text: string; isError?: boolean }[]>>({
-    clientside: [],
-    leadgen: [],
-    paperwork: [],
-  });
-  const [messageInput, setMessageInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const [chatError, setChatError] = useState<string | null>(null);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  // Parallax transforms
+  const y1 = useTransform(scrollYProgress, [0, 1], [0, -100])
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, -50])
+  const springY1 = useSpring(y1, { stiffness: 100, damping: 30 })
+  const springY2 = useSpring(y2, { stiffness: 100, damping: 30 })
 
+  // Scroll tracking
   useEffect(() => {
-    setIsLoaded(true)
+    const onScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // When tools view is selected, show the tool stream
-  useEffect(() => {
-    if (activeView === 'tools') {
-      setShowToolStream(true)
-      // Reset to timeline so the button isn't stuck in "active" state
-      setActiveView('timeline')
+  const features = [
+    {
+      title: "AI-Powered Lead Generation",
+      description: "Revolutionary lead capture with predictive analytics and intelligent follow-up sequences",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      features: ["Predictive Analytics", "Auto-Followup", "Smart Scoring"]
+    },
+    {
+      title: "Intelligent Document Management",
+      description: "Next-generation contract automation with AI-powered legal analysis",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      features: ["AI Legal Review", "Real-time Collaboration", "Smart Templates"]
+    },
+    {
+      title: "Hyper-Personalized Client Experience",
+      description: "Advanced client interaction system with behavioral analysis",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      features: ["Behavioral Analysis", "Personalized Comms", "Smart Scheduling"]
     }
-  }, [activeView])
+  ]
 
-  const handleCloseToolStream = () => {
-    setShowToolStream(false)
-    setActiveView('timeline') // Go back to timeline when closed
-  }
-
-  const handleReportIssue = (output: any) => {
-    // For now, let's create a simple issue report
-    const issueReport = {
-      toolOutput: output,
-      category: 'bug' as const,
-      description: `Issue with tool execution: ${output.toolName}`,
-      email: '',
-      additionalInfo: ''
+  const mcpServers = [
+    {
+      name: "LeadGen MCP",
+      port: "3001",
+      description: "Advanced lead generation with predictive analytics",
+      status: "Online",
+      metrics: { leads: "2.4k", conversion: "23%", response: "1.2s" }
+    },
+    {
+      name: "Paperwork MCP", 
+      port: "3002",
+      description: "Intelligent document processing and automation",
+      status: "Online",
+      metrics: { docs: "1.8k", accuracy: "99.7%", time: "45s" }
+    },
+    {
+      name: "ClientSide MCP",
+      port: "3003", 
+      description: "Hyper-personalized client interaction system",
+      status: "Online",
+      metrics: { clients: "892", satisfaction: "4.9/5", engagement: "87%" }
     }
-    submitIssueReport(issueReport)
-  }
+  ]
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageInput.trim()) return;
-    
-    setChatLoading(true);
-    setChatError(null);
-    
-    const userMsg = { sender: "You", text: messageInput };
-    setChatHistories(prev => ({
-      ...prev,
-      [activeChatTab]: [...prev[activeChatTab], userMsg],
-    }));
-    setMessageInput("");
-    
-    try {
-      const res = await fetch("/api/chatmcp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ server: activeChatTab, message: userMsg.text }),
-      });
-      
-      if (!res.ok) {
-        let errorMessage = "Failed to communicate with the server";
-        
-        switch (res.status) {
-          case 400:
-            errorMessage = "Invalid request. Please check your message and try again.";
-            break;
-          case 401:
-            errorMessage = "Authentication failed. Please refresh the page and try again.";
-            break;
-          case 403:
-            errorMessage = "Access denied. You don't have permission to access this server.";
-            break;
-          case 404:
-            errorMessage = `The ${MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label} server is not available.`;
-            break;
-          case 429:
-            errorMessage = "Too many requests. Please wait a moment before sending another message.";
-            break;
-          case 500:
-            errorMessage = "Internal server error. The AI service is temporarily unavailable.";
-            break;
-          case 502:
-          case 503:
-            errorMessage = `The ${MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label} server is currently offline. Please try again later.`;
-            break;
-          case 504:
-            errorMessage = "Request timeout. The server took too long to respond.";
-            break;
-          default:
-            errorMessage = `Server error (${res.status}). Please try again or contact support.`;
-        }
-        
-        throw new Error(errorMessage);
-      }
-      
-      const data = await res.json();
-      
-      if (!data.success && data.error) {
-        throw new Error(data.details || data.error);
-      }
-      
-      if (!data.response && !data.data && !data.message) {
-        throw new Error("Received empty response from the AI server.");
-      }
-      
-      // Extract the response text
-      let responseText = data.response || data.message || data.text || data.content;
-      
-      if (!responseText) {
-        responseText = typeof data.data === 'string' ? data.data : JSON.stringify(data, null, 2);
-      }
-      
-      // Add the AI response to chat history
-      setChatHistories(prev => ({
-        ...prev,
-        [activeChatTab]: [...prev[activeChatTab], { 
-          sender: MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label || activeChatTab, 
-          text: responseText
-        }],
-      }));
-    } catch (err: any) {
-      console.error('Chat error:', err);
-      
-      let userFriendlyError = "Unable to send message";
-      
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        userFriendlyError = "Network error. Please check your internet connection and try again.";
-      } else if (err.message.includes('timeout')) {
-        userFriendlyError = "Request timed out. The server is taking too long to respond.";
-      } else if (err.message) {
-        userFriendlyError = err.message;
-      }
-      
-      setChatError(userFriendlyError);
-      
-      // Remove the user message if there was an error
-      setChatHistories(prev => ({
-        ...prev,
-        [activeChatTab]: prev[activeChatTab].slice(0, -1),
-      }));
-    } finally {
-      setChatLoading(false);
-      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }
-  };
+  const stats = [
+    { number: "10,000+", label: "Properties Analyzed" },
+    { number: "2,500+", label: "Happy Agents" },
+    { number: "99.7%", label: "Accuracy Rate" },
+    { number: "3.2x", label: "Faster Closings" }
+  ]
 
   return (
-    <motion.div 
-      className="min-h-screen bg-gradient-to-br from-estate-50 via-blue-50 to-indigo-50 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+    <div
+      ref={containerRef}
+      className={`${inter.variable} font-sans min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden`}
     >
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-estate-200 to-blue-200 rounded-full opacity-20"
-          animate={{
-            x: [0, 30, 0],
-            y: [0, -20, 0],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full opacity-20"
-          animate={{
-            x: [0, -20, 0],
-            y: [0, 30, 0],
-            scale: [1, 1.2, 1]
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute top-1/3 left-1/4 w-32 h-32 bg-gradient-to-r from-estate-300 to-cyan-300 rounded-full opacity-10"
-          animate={{
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-            rotate: [0, 180, 360]
-          }}
-          transition={{
-            duration: 30,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-        
-        {/* Additional chat-mode specific elements */}
-        {activeView === 'chatmcp' && (
-          <>
-            <motion.div
-              className="absolute top-1/4 right-1/3 w-24 h-24 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full opacity-15"
-              animate={{
-                x: [0, -40, 0],
-                y: [0, 20, 0],
-                scale: [1, 0.8, 1]
-              }}
-              transition={{
-                duration: 18,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            <motion.div
-              className="absolute bottom-1/3 right-1/4 w-20 h-20 bg-gradient-to-r from-green-200 to-teal-200 rounded-full opacity-15"
-              animate={{
-                x: [0, 25, 0],
-                y: [0, -25, 0],
-                rotate: [0, -180, -360]
-              }}
-              transition={{
-                duration: 22,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-          </>
-        )}
-      </div>
-      {/* Header */}
-      <motion.header 
-        className="bg-white/80 shadow-sm border-b border-gray-200/50 backdrop-blur-xl sticky top-0 z-40"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
+      {/* Navigation */}
+      <nav className="relative z-50 bg-white/90 backdrop-blur-md border-b border-blue-100/50 sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <motion.div 
               className="flex items-center"
-              initial={{ x: -20, opacity: 0 }}
+              initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <motion.h1 
-                className="text-2xl font-bold text-estate-900"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
+              <h1 className="text-3xl font-semibold text-blue-600 tracking-tight">
                 EstateWise
-              </motion.h1>
-              <motion.span 
-                className="ml-2 text-sm text-gray-500"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                AI-Powered Real Estate Assistant
-              </motion.span>
+              </h1>
+              <span className="ml-4 text-sm text-gray-600 font-normal">AI-Powered Real Estate Platform</span>
             </motion.div>
             
             <motion.div 
-              className="flex items-center space-x-4"
-              initial={{ x: 20, opacity: 0 }}
+              className="flex items-center space-x-6"
+              initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             >
-              <motion.button
-                onClick={() => setActiveView('timeline')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeView === 'timeline'
-                    ? 'bg-estate-100 text-estate-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                Timeline
-              </motion.button>
-              <motion.button
-                onClick={() => setActiveView('cards')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeView === 'cards'
-                    ? 'bg-estate-100 text-estate-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                Smart Cards
-              </motion.button>
-              <motion.button
-                onClick={() => setActiveView('tools')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeView === 'tools'
-                    ? 'bg-estate-100 text-estate-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                Tool Streaming
-              </motion.button>
-              <motion.button
-                onClick={() => setActiveView('chatmcp')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeView === 'chatmcp'
-                    ? 'bg-estate-100 text-estate-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                Chat MCP
-              </motion.button>
+              <Link href="/signin">
+                <button className="px-6 py-3 text-gray-600 hover:text-blue-600 transition-colors font-normal">
+                  Sign In
+                </button>
+              </Link>
+              <Link href="/signup">
+                <button className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg">
+                  Get Started
+                </button>
+              </Link>
             </motion.div>
           </div>
         </div>
-      </motion.header>
+      </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          {/* Chat MCP Section */}
-          {activeView === 'chatmcp' && (
-            <motion.div 
-              className="mb-8"
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            >
-              <motion.div 
-                className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 overflow-hidden relative"
-                whileHover={{ 
-                  boxShadow: "0 32px 64px rgba(0,0,0,0.12)",
-                  y: -4
-                }}
-                transition={{ duration: 0.3 }}
+      {/* Video background overlay in hero */}
+      <section ref={heroRef} className="relative z-10 pt-32 pb-20">
+        <video
+          src="https://framerusercontent.com/assets/0XdgVMtWLrsKeVdX6gcE37AvI.mp4"
+          className="absolute inset-0 w-full h-full object-cover opacity-40 filter blur-md"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h1
+            className="text-6xl md:text-7xl font-light text-gray-900 mb-6"
+            style={{ y: springY1 }}
+            initial={{ opacity: 0 }}
+            animate={heroInView ? { opacity: 1 } : {}}
+            transition={{ duration: 1 }}
+          >
+            Transform
+            <br />
+            <span className="text-blue-600 font-semibold">Real Estate</span>
+            <br />
+            <span className="text-blue-500 font-semibold">with AI</span>
+          </motion.h1>
+
+          <motion.p
+            className="text-xl text-gray-700 max-w-3xl mx-auto font-normal"
+            style={{ y: springY2 }}
+            initial={{ opacity: 0 }}
+            animate={heroInView ? { opacity: 1 } : {}}
+            transition={{ duration: 1, delay: 0.3 }}
+          >
+            EstateWise is the <span className="text-blue-600 font-medium">revolutionary AI platform</span> that automates every aspect of real estate transactions.
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-6 justify-center mt-8"
+            initial={{ opacity: 0 }}
+            animate={heroInView ? { opacity: 1 } : {}}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            <Link href="/signup">
+              <button className="px-10 py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+                Start Free Trial
+              </button>
+            </Link>
+            <Link href="/dashboard">
+              <button className="px-10 py-4 border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition">
+                View Demo
+              </button>
+            </Link>
+          </motion.div>
+
+          {/* Stats Section */}
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20"
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 0.7 }}
+          >
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                className="text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-estate-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
-                {/* Header */}
-                <motion.div 
-                  className="bg-gradient-to-r from-estate-600 via-blue-600 to-indigo-600 p-6"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <motion.h2 
-                        className="text-2xl font-bold text-white"
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        Chat with MCP Servers
-                      </motion.h2>
-                      <motion.p 
-                        className="text-blue-100 text-sm mt-1"
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        Connect directly with your AI-powered real estate assistants
-                      </motion.p>
-                    </div>
-                    <motion.div
-                      className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm"
-                      animate={{ 
-                        scale: [1, 1.05, 1],
-                        rotate: [0, 180, 360]
-                      }}
-                      transition={{ 
-                        duration: 8, 
-                        repeat: Infinity, 
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <div className="w-6 h-6 bg-gradient-to-r from-white to-blue-100 rounded-full opacity-80"></div>
-                    </motion.div>
-                  </div>
-                </motion.div>
+                <div className="text-3xl font-semibold text-blue-600 mb-2">
+                  {stat.number}
+                </div>
+                <div className="text-gray-600 font-normal">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
-                {/* Server Tabs */}
-                <motion.div 
-                  className="px-6 pt-4 bg-gray-50/50"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="flex gap-1">
-                    {MCP_CHAT_SERVERS.map((tab, index) => (
-                                              <motion.button
-                        key={tab.key}
-                        className={`px-6 py-3 rounded-t-xl font-medium text-sm transition-all duration-300 relative overflow-hidden ${
-                          activeChatTab === tab.key 
-                            ? 'bg-white text-estate-700 shadow-lg border-t-2 border-estate-500' 
-                            : 'bg-gray-100/50 text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                        }`}
-                        onClick={() => setActiveChatTab(tab.key)}
-                        disabled={chatLoading}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6 + index * 0.1 }}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <motion.div 
-                            className={`w-2 h-2 rounded-full ${
-                              activeChatTab === tab.key ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gray-400'
-                            }`}
-                            animate={activeChatTab === tab.key ? {
-                              scale: [1, 1.2, 1],
-                              opacity: [1, 0.7, 1]
-                            } : {}}
-                            transition={{
-                              duration: 2,
-                              repeat: activeChatTab === tab.key ? Infinity : 0,
-                              ease: "easeInOut"
-                            }}
-                          />
-                          <span>{tab.label}</span>
-                        </div>
-                        {activeChatTab === tab.key && (
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-estate-500/10 to-blue-500/10"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          />
-                        )}
-                      </motion.button>
+      {/* Features Section - Unified Design */}
+      <section className="relative z-10 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl font-light text-gray-900 mb-6">
+              Powered by <span className="text-blue-600 font-semibold">Advanced AI</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-normal">
+              Our cutting-edge MCP (Model Context Protocol) servers work in perfect harmony to revolutionize your real estate business.
+            </p>
+          </motion.div>
+
+          {/* Unified Features Layout */}
+          <div className="space-y-16">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+                viewport={{ once: true }}
+              >
+                {/* Icon Section */}
+                <div className="flex-shrink-0">
+                  <motion.div 
+                    className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    {feature.icon}
+                  </motion.div>
+                </div>
+
+                {/* Content Section */}
+                <div className="flex-1 text-center lg:text-left">
+                  <h3 className="text-3xl font-semibold text-gray-900 mb-6">{feature.title}</h3>
+                  <p className="text-lg text-gray-600 mb-8 leading-relaxed font-normal">{feature.description}</p>
+                  
+                  {/* Feature List */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {feature.features.map((feat, idx) => (
+                      <div key={idx} className="flex items-center justify-center lg:justify-start space-x-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                        <span className="text-gray-700 font-normal">{feat}</span>
+                      </div>
                     ))}
                   </div>
-                </motion.div>
-
-                {/* Chat Messages Area */}
-                <motion.div 
-                  className="h-96 overflow-y-auto bg-gradient-to-br from-gray-50/30 via-white/50 to-blue-50/30 p-6 space-y-4 relative"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  {/* Subtle pattern overlay */}
-                  <div className="absolute inset-0 opacity-5 bg-gradient-to-r from-estate-500 to-blue-500" style={{
-                    backgroundImage: `radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), 
-                                     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)`
-                  }}></div>
-                  <AnimatePresence mode="popLayout">
-                    {chatHistories[activeChatTab].length === 0 ? (
-                      <motion.div 
-                        className="flex flex-col items-center justify-center h-full text-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                      >
-                        <motion.div
-                          className="w-16 h-16 bg-gradient-to-br from-estate-400 via-blue-400 to-indigo-400 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
-                          animate={{ 
-                            scale: [1, 1.05, 1],
-                            rotate: [0, 2, -2, 0]
-                          }}
-                          transition={{ 
-                            duration: 4, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          <div className="w-8 h-8 bg-white/20 rounded-lg backdrop-blur-sm"></div>
-                        </motion.div>
-                        <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent mb-2">
-                          Ready to chat with {MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label}
-                        </h3>
-                        <p className="text-gray-500 text-sm max-w-sm">
-                          Start a conversation by typing your question or request below. Your AI assistant is ready to help.
-                        </p>
-                      </motion.div>
-                    ) : (
-                      chatHistories[activeChatTab].map((msg, idx) => (
-                        <motion.div 
-                          key={idx} 
-                          className={`flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}
-                          initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          transition={{ 
-                            type: "spring", 
-                            stiffness: 300, 
-                            damping: 25,
-                            delay: idx * 0.05
-                          }}
-                        >
-                          <div className={`max-w-sm lg:max-w-md xl:max-w-lg break-words ${
-                            msg.sender === 'You' ? 'order-2' : 'order-1'
-                          }`}>
-                            <motion.div
-                              className={`px-4 py-3 rounded-2xl shadow-sm relative overflow-hidden ${
-                                msg.isError
-                                  ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 text-red-700 mr-4'
-                                  : msg.sender === 'You' 
-                                    ? 'bg-gradient-to-r from-estate-500 to-blue-500 text-white ml-4' 
-                                    : 'bg-white border border-gray-200 text-gray-800 mr-4'
-                              }`}
-                              whileHover={{ scale: msg.isError ? 1.01 : 1.02 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                            >
-                              {msg.sender === 'You' && !msg.isError && (
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
-                                  initial={{ x: '-100%' }}
-                                  animate={{ x: '100%' }}
-                                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                                />
-                              )}
-                              {msg.isError && (
-                                <motion.div
-                                  className="absolute inset-0 bg-gradient-to-r from-red-100/30 to-transparent"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: [0, 0.3, 0] }}
-                                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                                />
-                              )}
-                              <div className={`text-xs font-medium mb-1 flex items-center gap-1 ${
-                                msg.isError ? 'text-red-600' :
-                                msg.sender === 'You' ? 'text-blue-100' : 'text-gray-500'
-                              }`}>
-                                {msg.isError && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                                  >
-                                    ⚠️
-                                  </motion.div>
-                                )}
-                                {msg.sender}
-                              </div>
-                              <div className="text-sm leading-relaxed relative z-10">{msg.text}</div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </AnimatePresence>
-                  <div ref={chatBottomRef} />
-                </motion.div>
-
-                {/* Input Area */}
-                <motion.div 
-                  className="p-6 bg-white border-t border-gray-200/50"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                >
-                  <form onSubmit={handleSendMessage} className="flex gap-3">
-                    <motion.div 
-                      className="flex-1 relative"
-                      whileHover={{ scale: 1.01 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <input
-                        type="text"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-300/50 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-estate-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
-                        placeholder={`Ask ${MCP_CHAT_SERVERS.find(s => s.key === activeChatTab)?.label} anything...`}
-                        value={messageInput}
-                        onChange={e => setMessageInput(e.target.value)}
-                        disabled={chatLoading}
-                        required
-                      />
-                    </motion.div>
-                    <motion.button
-                      type="submit"
-                      className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-200 relative overflow-hidden ${
-                        chatLoading || !messageInput.trim()
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-estate-500 to-blue-500 text-white hover:from-estate-600 hover:to-blue-600 shadow-lg hover:shadow-xl'
-                      }`}
-                      disabled={chatLoading || !messageInput.trim()}
-                      whileHover={chatLoading || !messageInput.trim() ? {} : { scale: 1.05 }}
-                      whileTap={chatLoading || !messageInput.trim() ? {} : { scale: 0.95 }}
-                    >
-                      {!chatLoading && !messageInput.trim() && (
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                          initial={{ x: '-100%' }}
-                          animate={{ x: '100%' }}
-                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                        />
-                      )}
-                      {chatLoading ? (
-                        <motion.div className="flex items-center space-x-2">
-                          <motion.div
-                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          />
-                          <span>Sending...</span>
-                        </motion.div>
-                      ) : (
-                        <div className="flex items-center space-x-2 relative z-10">
-                          <span>Send Message</span>
-                        </div>
-                      )}
-                    </motion.button>
-                  </form>
-                  
-                  {chatError && (
-                    <motion.div 
-                      className="mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl"
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <motion.div
-                          className="flex-shrink-0 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mt-0.5"
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </motion.div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium text-red-800 mb-1">
-                            Message Failed
-                          </h4>
-                          <p className="text-red-700 text-sm leading-relaxed">
-                            {chatError}
-                          </p>
-                          <motion.button
-                            onClick={() => setChatError(null)}
-                            className="mt-2 text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            Dismiss
-                          </motion.button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </motion.div>
+                </div>
               </motion.div>
-            </motion.div>
-          )}
-
-          {/* Command Palette - Hide in chat mode */}
-          {activeView !== 'chatmcp' && (
-            <motion.div 
-              className="mb-8"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              whileHover={{ y: -2 }}
-            >
-              <CommandPalette />
-            </motion.div>
-          )}
-
-          {/* Content Area - Hide in chat mode */}
-          {activeView !== 'chatmcp' && (
-            <motion.div 
-              className="bg-white/80 rounded-xl shadow-lg border border-gray-200/50 p-6 backdrop-blur-xl"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              layout
-              whileHover={{ 
-                boxShadow: "0 25px 50px rgba(0,0,0,0.1)",
-                y: -2
-              }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeView}
-                  initial={{ opacity: 0, x: activeView === 'timeline' ? -20 : 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: activeView === 'timeline' ? 20 : -20 }}
-                  transition={{ 
-                    duration: 0.4, 
-                    ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for smooth transitions
-                  }}
-                >
-                  {activeView === 'timeline' ? (
-                    <TimelineView />
-                  ) : (
-                    <SmartCards />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </motion.div>
-      </main>
-
-      {/* Status Bar */}
-      <motion.footer 
-        className="bg-white/80 border-t border-gray-200/50 mt-auto backdrop-blur-xl"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center text-sm text-gray-500">
-            <motion.div 
-              className="flex items-center space-x-4"
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-            >
-              <motion.div 
-                className="flex items-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <motion.div 
-                  className="w-2 h-2 bg-green-500 rounded-full"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                ></motion.div>
-                <span>LeadGen MCP: Online</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <motion.div 
-                  className="w-2 h-2 bg-green-500 rounded-full"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.3
-                  }}
-                ></motion.div>
-                <span>Paperwork MCP: Online</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <motion.div 
-                  className="w-2 h-2 bg-green-500 rounded-full"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.6
-                  }}
-                ></motion.div>
-                <span>ClientSide MCP: Online</span>
-              </motion.div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-            >
-              EstateWise v0.1.0
-            </motion.div>
+            ))}
           </div>
         </div>
-      </motion.footer>
+      </section>
 
-      {/* Floating Action Button */}
-      <FloatingActionButton />
+      {/* MCP Servers Section - Unified */}
+      <section className="relative z-10 py-20 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl font-light text-gray-900 mb-6">
+              Live <span className="text-blue-600 font-semibold">AI Servers</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-normal">
+              Our AI servers are running 24/7, processing thousands of real estate transactions with lightning speed.
+            </p>
+          </motion.div>
 
-      {/* Tool Stream Modal */}
-      <ToolStream 
-        isOpen={showToolStream}
-        onClose={handleCloseToolStream}
-        toolExecutions={toolOutputs}
-        connectionStatus={connectionStatus}
-        onReportIssue={handleReportIssue}
-      />
-    </motion.div>
+          {/* Unified Server Layout */}
+          <div className="grid md:grid-cols-3 gap-8">
+            {mcpServers.map((server, index) => (
+              <motion.div
+                key={index}
+                className="group relative"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5 }}
+              >
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-blue-100/50 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900">{server.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-sm text-green-600 font-medium">{server.status}</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 mb-8 leading-relaxed font-normal">{server.description}</p>
+                  
+                  <div className="space-y-4 mb-6">
+                    {Object.entries(server.metrics).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-gray-500 text-sm capitalize font-normal">{key}</span>
+                        <span className="text-gray-900 font-semibold text-lg">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="text-xs text-gray-400 font-mono">Port: {server.port}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative z-10 py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl font-light text-gray-900 mb-6">
+              Ready to <span className="text-blue-600 font-semibold">Revolutionize</span> Your Business?
+            </h2>
+            <p className="text-xl text-gray-600 mb-10 leading-relaxed font-normal">
+              Join thousands of real estate professionals who are already using EstateWise to automate their workflows and close deals faster than ever.
+            </p>
+            <Link href="/signup">
+              <button className="px-12 py-5 bg-blue-600 text-white rounded-lg text-xl font-medium hover:bg-blue-700 transition-colors shadow-lg">
+                Get Started Today
+              </button>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 bg-white/90 backdrop-blur-md border-t border-blue-100/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center mb-6 md:mb-0">
+              <h3 className="text-2xl font-semibold text-blue-600">EstateWise</h3>
+              <span className="ml-4 text-gray-600 font-normal">AI-Powered Real Estate Platform</span>
+            </div>
+            <div className="flex items-center space-x-8 text-sm">
+              <Link href="/signin" className="text-gray-600 hover:text-blue-600 transition-colors font-normal">Sign In</Link>
+              <Link href="/signup" className="text-gray-600 hover:text-blue-600 transition-colors font-normal">Sign Up</Link>
+              <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors font-normal">Demo</Link>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-blue-100/50 text-center text-sm text-gray-500">
+            © 2024 EstateWise. All rights reserved. | Built with ❤️ for the future of real estate
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 } 
